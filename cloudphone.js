@@ -1,0 +1,89 @@
+/* CloudPhone layer for manage.html and run.html: animated loading screen with progress %,
+   D-pad/touch helpers (manage) and the library snapshot for the instant launcher. */
+(function () {
+  var run = /run(\.html)?$/.test(location.pathname);
+  document.body.classList.add(run ? 'cp-run' : 'cp-launcher');
+  window.addEventListener('load', function () { window.focus(); });
+  document.body.addEventListener('click', function () { window.focus(); });
+
+  /* ---------- loading screen (progress is an estimate: stage based + easing) ---------- */
+  var ov = document.createElement('div'); ov.id = 'cp-load';
+  ov.innerHTML = '<img src="icon.png" alt="" width="40" height="40"><div class="cp-ring"></div><div id="cp-pct">0%</div>' +
+    '<div class="cp-track"><div id="cp-fill"></div></div><div id="cp-msg">Starting Java engine</div>';
+  document.body.appendChild(ov);
+  var pct = 0, floor = 0, cap = 60, done = false, failed = false, msg = document.getElementById('cp-msg');
+  function paint() { document.getElementById('cp-pct').textContent = Math.floor(pct) + '%'; document.getElementById('cp-fill').style.width = pct + '%'; }
+  var tick = setInterval(function () { if (done || failed) return; pct = Math.max(pct, floor); pct += (cap - pct) * 0.035 + 0.03; if (pct > cap) pct = cap; paint(); }, 100);
+  function stage(n) {
+    if (n === 'cheerpjInit') { floor = 62; cap = 86; msg.textContent = 'Loading emulator'; }
+    else if (n === 'cheerpjRunLibrary') { floor = 88; cap = 97; msg.textContent = run ? 'Starting game' : 'Almost ready'; }
+  }
+  function finish() { if (done || failed) return; done = true; pct = 100; paint(); setTimeout(function () { ov.classList.add('cp-out'); setTimeout(function () { ov.style.display = 'none'; }, 350); }, 250); clearInterval(tick); }
+  function fail(t) { if (done || failed) return; failed = true; ov.classList.add('cp-err'); msg.textContent = t; document.getElementById('cp-pct').textContent = '!'; }
+  ['cheerpjInit', 'cheerpjRunLibrary'].forEach(function (n) {
+    var f = window[n]; if (typeof f !== 'function') return;
+    window[n] = function () { var r = f.apply(this, arguments); Promise.resolve(r).then(function () { stage(n); }); return r; };
+  });
+  window.addEventListener('unhandledrejection', function () { fail('Could not start the Java engine. Check your internet, then go Back and try again.'); });
+  window.addEventListener('error', function (e) { if (e.target && e.target.tagName === 'SCRIPT') fail('Could not load the Java engine. Check your internet, then go Back and try again.'); }, true);
+  setTimeout(function () { if (!done && !failed) msg.textContent += ' (first load can take a minute)'; }, 15000);
+  var ld = document.getElementById('loading');
+  if (ld) new MutationObserver(function () { if (/Crash/.test(ld.textContent)) fail('The game crashed. Press Back.'); }).observe(ld, { childList: true, characterData: true, subtree: true });
+
+  if (run) {
+    window.cpGameStarted = function () {
+      finish();
+      try { if (sessionStorage.getItem('j2me.hint')) return; sessionStorage.setItem('j2me.hint', '1'); } catch (e) {}
+      var t = document.createElement('div'); t.id = 'cp-toast'; t.textContent = 'Left key: tap = soft key, hold = menu. Right key = soft key.';
+      document.body.appendChild(t); setTimeout(function () { t.remove(); }, 4500);
+    };
+    return;  /* in a game the emulator owns all keys */
+  }
+
+  /* ---------- manage.html: softkey bar, D-pad/touch helpers ---------- */
+  var bar = document.createElement('div'); bar.id = 'cp-bar';
+  bar.innerHTML = '<span id="softkey-left">Select</span><span id="softkey-right">Back</span>';
+  document.body.appendChild(bar);
+  function items() {
+    return Array.prototype.filter.call(document.querySelectorAll('button,a[href],input,select,textarea,[tabindex]'),
+      function (e) { return !e.disabled && e.type !== 'hidden' && e.offsetParent !== null && e.tabIndex >= 0 && e.id !== 'cp-bar'; });
+  }
+  function step(d) {
+    var l = items(); if (!l.length) return;
+    var n = l[(l.indexOf(document.activeElement) + d + l.length) % l.length]; n.focus(); n.scrollIntoView({ block: 'nearest' });
+  }
+  function select() { var a = document.activeElement; if (a && a !== document.body) a.click(); }
+  function back() { if (history.length > 1) history.back(); else location.href = './'; }
+  window.addEventListener('keydown', function (e) {
+    var t = e.target && e.target.tagName, ty = e.target && e.target.type;
+    if (e.key === 'Escape') { e.preventDefault(); select(); return; }
+    if (t === 'SELECT' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      e.preventDefault(); var s = e.target, n = s.selectedIndex + (e.key === 'ArrowRight' ? 1 : -1);
+      if (n >= 0 && n < s.options.length) { s.selectedIndex = n; s.dispatchEvent(new Event('change', { bubbles: true })); } return;
+    }
+    if (t === 'TEXTAREA' || (t === 'INPUT' && /^(text|search|number|url|email|password)$/.test(ty) && (e.key === 'ArrowLeft' || e.key === 'ArrowRight'))) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); step(1); } else if (e.key === 'ArrowUp') { e.preventDefault(); step(-1); }
+  });
+  document.getElementById('softkey-left').addEventListener('click', select);
+  document.getElementById('softkey-right').addEventListener('click', back);
+
+  var timer = null;
+  function snap() {
+    var m = document.getElementById('main'); if (!m || m.style.display === 'none') return;
+    finish();
+    var out = [];
+    document.querySelectorAll('#game-list .game-item').forEach(function (it) {
+      var a = it.querySelector('a'), im = it.querySelector('img.icon'), n = it.querySelector('.game-info'); if (!a) return;
+      var id = new URL(a.href, location.href).searchParams.get('app');
+      out.push({ id: id, name: n ? n.textContent : id, icon: im && im.src.indexOf('data:image/gif') !== 0 ? im.src : '' });
+    });
+    try { localStorage.setItem('j2me.games', JSON.stringify(out)); } catch (e) { return; }
+    if (/[?&]sync=1/.test(location.search)) location.replace('./');
+  }
+  function later() { clearTimeout(timer); timer = setTimeout(snap, 600); }
+  var mo = new MutationObserver(later);
+  var gl = document.getElementById('game-list'), mn = document.getElementById('main');
+  if (gl) mo.observe(gl, { childList: true, subtree: true });
+  if (mn) mo.observe(mn, { attributes: true, attributeFilter: ['style'] });
+  var f = items()[0]; if (f) f.focus();
+})();
