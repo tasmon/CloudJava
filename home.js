@@ -1,7 +1,7 @@
 /* Fast launcher: renders instantly from the browser-side library cache; the JVM only boots inside run.html */
 (function () {
   'use strict';
-  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '1.2.1';
+  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '1.3.0';
   var prefs = { theme: 'dark', touch: 'auto' };
   try { var p = JSON.parse(localStorage.getItem(KP) || '{}'); for (var k in p) prefs[k] = p[k]; } catch (e) {}
   var games = null;
@@ -10,6 +10,7 @@
   var $ = function (s) { return document.querySelector(s); };
   var app = $('#app'), title = $('#title'), L = $('#softkey-left'), R = $('#softkey-right');
   var view = 'home', sel = 0, rows = [], touched = false;
+  function soundOn() { try { return localStorage.getItem('j2me.sound') === 'on'; } catch (e) { return false; } }
   function save() { try { localStorage.setItem(KP, JSON.stringify(prefs)); } catch (e) {} }
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function theme() { document.body.setAttribute('data-theme', prefs.theme); }
@@ -50,6 +51,7 @@
       draw('Settings', [
         { l: 'Theme', s: prefs.theme, fn: function () { prefs.theme = cycle(['dark', 'light', 'green'], prefs.theme); save(); theme(); V.settings(); } },
         { l: 'Touch keypad in games', s: prefs.touch, fn: function () { prefs.touch = cycle(['auto', 'on', 'off'], prefs.touch); save(); V.settings(); } },
+        { l: 'Sound in games', s: soundOn() ? 'on (may stall CloudPhone)' : 'off (recommended)', fn: function () { try { localStorage.setItem('j2me.sound', soundOn() ? 'off' : 'on'); } catch (e) {} V.settings(); } },
         { l: 'Refresh library', s: 'Rescan (loads Java engine)', fn: function () { try { localStorage.removeItem(KG); sessionStorage.removeItem('j2me.sync'); } catch (e) {} location.replace('manage.html?sync=1'); } }
       ], true); keys('Select', 'Back');
     },
@@ -59,6 +61,7 @@
         '<b>Keys in a game</b>Arrows and OK as on the phone. 2 up, 8 down, 4 left, 6 right, 5 fire. * and # work. Left key: tap = left soft key, hold = emulator menu (settings, exit). Right key = right soft key.' +
         '<b>Settings</b>In the emulator menu set Phone type to Standard if keys feel wrong.' +
         '<b>Touch</b>Touch phones get an on-screen keypad.' +
+        '<b>Sound</b>Off by default: CloudPhone cannot play it and game sounds made the screen hang with "video loading". Turn on in Settings only on a device that plays sound.' +
         '<b>Loading</b>The first start of the Java engine needs internet and can take a minute.' +
         '<b>Network</b>Games that need internet (browsers, chat) cannot connect: this emulator does not support network access.' +
         '<b>Scroll</b>Use Up/Down or swipe.' }]); keys('', 'Back');

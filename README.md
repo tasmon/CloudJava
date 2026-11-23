@@ -6,7 +6,7 @@
 
 <p>
   <a href="https://tasmon.github.io/CloudJava/"><img alt="Live on GitHub Pages" src="https://img.shields.io/badge/live-GitHub%20Pages-1971e6?logo=github&logoColor=white"></a>
-  <img alt="Version 1.2.1" src="https://img.shields.io/badge/version-1.2.1-1f9d55">
+  <img alt="Version 1.3.0" src="https://img.shields.io/badge/version-1.3.0-1f9d55">
   <img alt="Platform CloudPhone" src="https://img.shields.io/badge/platform-CloudPhone-0a84ff">
   <img alt="Screens QVGA and QQVGA" src="https://img.shields.io/badge/screen-240x320%20%7C%20128x160-555">
   <img alt="Java ME MIDP" src="https://img.shields.io/badge/Java%20ME-MIDP%20games-e76f00?logo=openjdk&logoColor=white">
@@ -16,7 +16,7 @@
 
 **CloudJava** plays Java ME (J2ME) `.jar` games on CloudPhone. A fast, keypad- and touch-friendly launcher built for small screens, with your game library, settings and saves kept in the browser. Powered by [freej2me-web](https://github.com/zb3/freej2me-web).
 
-Version 1.2.1 - Developer: Tasmon Islam
+Version 1.3.0 - Developer: Tasmon Islam
 
 ## Add to CloudPhone
 1. Go to [CloudPhone Developer Page](https://www.cloudfone.com/my).  
@@ -25,6 +25,9 @@ Version 1.2.1 - Developer: Tasmon Islam
    `https://tasmon.github.io/CloudJava/`  
 4. Upload icons if required (`icon.png` is included).  
 5. Save and refresh - **CloudJava** will appear on your CloudPhone. 
+
+## What's new in 1.3.0
+- Stability: game sound is now off by default (Settings > Sound in games). Sound clips used a hidden video player that made CloudPhone show "video loading" and freeze the game; games now get silent players instead.
 
 ## What's new in 1.2.1
 - Manage games: Wipe Data and Uninstall now appear directly under the selected game.

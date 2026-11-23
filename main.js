@@ -1,4 +1,4 @@
-import { LibMedia } from "./libmedia.js";
+import { LibMedia, soundOn, makeSilentMidi } from "./libmedia.js";
 import { LibMidi, createUnlockingAudioContext } from "./libmidi.js";
 import { codeMap, KeyRepeatManager } from "./key.js";
 import { EventQueue } from "./eventqueue.js";
@@ -266,8 +266,12 @@ async function init() {
         window.cpTap && window.cpTap('F2');
     });
 
-    window.libmidi = new LibMidi(createUnlockingAudioContext());
-    await window.libmidi.init();
+    if (soundOn()) {
+        window.libmidi = new LibMidi(createUnlockingAudioContext());
+        await window.libmidi.init();
+    } else {
+        window.libmidi = { midiPlayer: makeSilentMidi(), async init() {} };
+    }
     window.libmidi.midiPlayer.addEventListener('end-of-media', e => {
         window.evtQueue.queueEvent({kind: 'player-eom', player: e.target});
     })

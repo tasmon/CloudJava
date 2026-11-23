@@ -1,5 +1,31 @@
 import { transcode } from "./transcode.js"
 
+/* Sound is OFF by default: CloudPhone's cloud browser cannot play it, and the hidden <video>
+   element used for every sound clip triggers its "video loading" screen and stalls the game.
+   Off = games get silent stand-in players that still report playback and end-of-media. */
+export const soundOn = () => { try { return localStorage.getItem('j2me.sound') === 'on'; } catch (e) { return false; } };
+
+function makeFakeMedia() {
+    const el = new EventTarget();
+    Object.assign(el, { style: {}, controls: false, paused: true, currentTime: 0, duration: 1, volume: 1, loop: false, muted: false, readyState: 4, videoWidth: 0, videoHeight: 0 });
+    let t = null;
+    el.play = async () => { el.paused = false; clearTimeout(t); if (!el.loop) t = setTimeout(() => { el.paused = true; el.dispatchEvent(new Event('ended')); }, 300); };
+    el.pause = () => { el.paused = true; clearTimeout(t); };
+    return el;
+}
+
+export function makeSilentMidi() {
+    const p = new EventTarget(); let t = null, looping = false;
+    p.duration = 1; p.volume = 1;
+    p.setSequence = async () => 1;
+    p.play = () => { clearTimeout(t); if (!looping) t = setTimeout(() => p.dispatchEvent(new Event('end-of-media')), 300); };
+    p.loop = n => { looping = !!n; };
+    p.stop = () => clearTimeout(t);
+    p.shortEvent = () => {}; p.seek = () => {}; p.close = () => {};
+    p.getPosition = async () => 0;
+    return p;
+}
+
 
 export class LibMedia {
     constructor() {
@@ -82,7 +108,7 @@ export class MediaPlayer extends EventTarget {
 
         // Create a MediaSource and a hidden video element.
 
-        this.mediaElement = document.createElement("video");
+        this.mediaElement = soundOn() ? document.createElement("video") : makeFakeMedia();
         this.mediaElement.controls = true;
         // Hide video element by default (only audio will be played).
         this.mediaElement.style.display = "none";
@@ -123,6 +149,7 @@ export class MediaPlayer extends EventTarget {
 
     // this returns a boolean, doesn't throw
     async load(buffer, contentType = null) {
+        if (!soundOn()) return true;
         let blob = null;
         let ti = buffer.byteLength;
 
