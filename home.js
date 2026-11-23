@@ -1,7 +1,7 @@
 /* Fast launcher: renders instantly from the browser-side library cache; the JVM only boots inside run.html */
 (function () {
   'use strict';
-  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '1.1.0';
+  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '1.2.0';
   var prefs = { theme: 'dark', touch: 'auto' };
   try { var p = JSON.parse(localStorage.getItem(KP) || '{}'); for (var k in p) prefs[k] = p[k]; } catch (e) {}
   var games = null;
@@ -36,7 +36,7 @@
       var it = [{ h: 'Games (' + games.length + ')' }];
       games.forEach(function (g) { it.push({ l: g.name, s: 'Tap or OK to play', icon: g.icon, fn: function () { launch(g); } }); });
       if (!games.length) { it.push({ t: 'No games yet.' }); it.push({ l: 'Add game', fn: function () { location.href = 'manage.html'; } }); }
-      draw('J2ME Emulator', it, true); keys('Menu', '');
+      draw('CloudJava', it, true); keys('Menu', '');
     },
     menu: function () {
       draw('Menu', [
@@ -63,7 +63,7 @@
         '<b>Network</b>Games that need internet (browsers, chat) cannot connect: this emulator does not support network access.' +
         '<b>Scroll</b>Use Up/Down or swipe.' }]); keys('', 'Back');
     },
-    about: function () { draw('About', [{ t: '<b>J2ME Emulator</b>Version - ' + ver + '<br>Developer - Tasmon Islam<br>Engine - freej2me-web by zb3 (GPLv3), based on FreeJ2ME<br>Java runtime - CheerpJ' }]); keys('', 'Back'); }
+    about: function () { draw('About', [{ t: '<b>CloudJava</b>Version - ' + ver + '<br>Developer - Tasmon Islam<br>Engine - freej2me-web by zb3 (GPLv3), based on FreeJ2ME<br>Java runtime - CheerpJ' }]); keys('', 'Back'); }
   };
   function keys(l, r) { L.textContent = l; R.textContent = r; }
   function go(v, replace) { sel = 0; if (v !== view && !replace) history.pushState({ v: v }, '', '#' + v); view = v; V[v](); }
@@ -84,6 +84,8 @@
   });
   window.addEventListener('load', function () { window.focus(); });
   document.body.addEventListener('click', function () { window.focus(); });
+  function fit() { document.documentElement.style.setProperty('--vh', window.innerHeight + 'px'); }
+  fit(); window.addEventListener('resize', fit);
   theme(); var h = location.hash.slice(1); if (!V[h] || h === 'menu') h = 'home';
   history.replaceState({ v: h }, '', h === 'home' ? location.pathname + location.search : '#' + h); go(h, true);
 })();

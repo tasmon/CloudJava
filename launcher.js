@@ -228,6 +228,16 @@ function setupAddMode() {
 }
 
 async function processGameFile(fileBuffer, fileName) {
+    try {
+        await processGameFileInner(fileBuffer, fileName);
+    } catch (e) {
+        document.getElementById("file-input-step").style.display = "";
+        document.getElementById("file-input-loading").style.display = "none";
+        window.cpError && window.cpError("Could not install " + fileName, e);
+    }
+}
+
+async function processGameFileInner(fileBuffer, fileName) {
     const MIDletLoader = await lib.org.recompile.mobile.MIDletLoader;
     const File = await lib.java.io.File;
 
@@ -333,8 +343,8 @@ async function setupAddManageGame(app, isAdding) {
     previewControls.style.display = isAdding ? "none" : "";
     if (!isAdding) {
         document.getElementById("uninstall-btn").disabled = false;
-        document.getElementById("uninstall-btn").onclick = (e) => {
-            if (!confirm("Do you want to uninstall " + app.name + "?")) {
+        document.getElementById("uninstall-btn").onclick = async (e) => {
+            if (!(await cpConfirm("Do you want to uninstall " + app.name + "?"))) {
                 return;
             }
 
@@ -343,8 +353,8 @@ async function setupAddManageGame(app, isAdding) {
         };
 
         document.getElementById("wipe-data-btn").disabled = false;
-        document.getElementById("wipe-data-btn").onclick = (e) => {
-            if (!confirm("Do you want wipe " + app.name + " rms storage?")) {
+        document.getElementById("wipe-data-btn").onclick = async (e) => {
+            if (!(await cpConfirm("Do you want wipe " + app.name + " rms storage?"))) {
                 return;
             }
 
@@ -437,6 +447,15 @@ function handleOptionalJadFileUpload(e) {
 }
 
 async function doAddSaveGame() {
+    try {
+        await doAddSaveGameInner();
+    } catch (e) {
+        document.getElementById("add-save-button").disabled = false;
+        window.cpError && window.cpError("Could not save game", e);
+    }
+}
+
+async function doAddSaveGameInner() {
     document.getElementById("add-save-button").disabled = true;
 
     readUI(state.currentGame);
@@ -504,9 +523,7 @@ function openEditGame(gameObj) {
 
 function confirmDiscard() {
     if (state.currentGame != null && (state.currentGame.jarFile || state.currentGame.appId)) {
-        if (!confirm("Discard changes?")) {
-            return false;
-        }
+        /* confirm() is unavailable on CloudPhone: always continue */
     }
 
     return true;
@@ -565,7 +582,7 @@ async function doExportData() {
         setTimeout(() => URL.revokeObjectURL(objectURL), 1000);
     } catch (error) {
         console.error("Error exporting data:", error);
-        alert("Error exporting data");
+        cpAlert("Error exporting data");
     }
 }
 

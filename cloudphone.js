@@ -8,7 +8,7 @@
 
   /* ---------- loading screen (progress is an estimate: stage based + easing) ---------- */
   var ov = document.createElement('div'); ov.id = 'cp-load';
-  ov.innerHTML = '<img src="icon.png" alt="" width="40" height="40"><div class="cp-ring"></div><div id="cp-pct">0%</div>' +
+  ov.innerHTML = '<img src="icon.png" alt="" width="40" height="40"><div class="cp-name">CloudJava</div><div class="cp-ring"></div><div id="cp-pct">0%</div>' +
     '<div class="cp-track"><div id="cp-fill"></div></div><div id="cp-msg">Starting Java engine</div>';
   document.body.appendChild(ov);
   var pct = 0, floor = 0, cap = 60, done = false, failed = false, msg = document.getElementById('cp-msg');
@@ -40,17 +40,40 @@
     return;  /* in a game the emulator owns all keys */
   }
 
-  /* ---------- manage.html: softkey bar, D-pad/touch helpers ---------- */
+  /* ---------- manage.html: dialogs (no native alert/confirm), softkey bar, D-pad/touch helpers ---------- */
+  function dialog(msg, btns) {
+    return new Promise(function (res) {
+      var d = document.createElement('div'); d.id = 'cp-dlg';
+      d.innerHTML = '<div class="cp-box"><div class="cp-dmsg"></div><div class="cp-dbtns"></div></div>';
+      d.querySelector('.cp-dmsg').textContent = msg;
+      btns.forEach(function (b) { var x = document.createElement('button'); x.textContent = b.t; x.onclick = function () { d.remove(); res(b.v); }; d.querySelector('.cp-dbtns').appendChild(x); });
+      document.body.appendChild(d); d.querySelector('button').focus();
+    });
+  }
+  window.cpConfirm = function (m) { return dialog(m, [{ t: 'Yes', v: true }, { t: 'No', v: false }]); };
+  window.cpAlert = function (m) { return dialog(m, [{ t: 'OK', v: true }]); };
+  window.cpError = function (title, e) {
+    var t = ''; try { t = (e && (e.message || e.toString())) || String(e); } catch (x) {}
+    window.cpAlert(title + (t ? ': ' + t.slice(0, 240) : ''));
+  };
+
   var bar = document.createElement('div'); bar.id = 'cp-bar';
   bar.innerHTML = '<span id="softkey-left">Select</span><span id="softkey-right">Back</span>';
   document.body.appendChild(bar);
   function items() {
+    var dl = document.getElementById('cp-dlg'); if (dl) return Array.prototype.slice.call(dl.querySelectorAll('button'));
     return Array.prototype.filter.call(document.querySelectorAll('button,a[href],input,select,textarea,[tabindex]'),
       function (e) { return !e.disabled && e.type !== 'hidden' && e.offsetParent !== null && e.tabIndex >= 0 && e.id !== 'cp-bar'; });
   }
   function step(d) {
     var l = items(); if (!l.length) return;
-    var n = l[(l.indexOf(document.activeElement) + d + l.length) % l.length]; n.focus(); n.scrollIntoView({ block: 'nearest' });
+    var i = l.indexOf(document.activeElement), dl = document.getElementById('cp-dlg');
+    if (!dl) {  /* let Up/Down also scroll text that has nothing focusable left */
+      var bottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      if (d > 0 && i === l.length - 1 && !bottom) { window.scrollBy(0, 60); return; }
+      if (d < 0 && i <= 0 && window.scrollY > 0) { window.scrollBy(0, -60); return; }
+    }
+    var n = l[(i + d + l.length) % l.length]; n.focus(); n.scrollIntoView({ block: 'nearest' });
   }
   function select() { var a = document.activeElement; if (a && a !== document.body) a.click(); }
   function back() { if (history.length > 1) history.back(); else location.href = './'; }
@@ -62,7 +85,8 @@
       if (n >= 0 && n < s.options.length) { s.selectedIndex = n; s.dispatchEvent(new Event('change', { bubbles: true })); } return;
     }
     if (t === 'TEXTAREA' || (t === 'INPUT' && /^(text|search|number|url|email|password)$/.test(ty) && (e.key === 'ArrowLeft' || e.key === 'ArrowRight'))) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); step(1); } else if (e.key === 'ArrowUp') { e.preventDefault(); step(-1); }
+    var dlg = !!document.getElementById('cp-dlg');
+    if (e.key === 'ArrowDown' || (dlg && e.key === 'ArrowRight')) { e.preventDefault(); step(1); } else if (e.key === 'ArrowUp' || (dlg && e.key === 'ArrowLeft')) { e.preventDefault(); step(-1); }
   });
   document.getElementById('softkey-left').addEventListener('click', select);
   document.getElementById('softkey-right').addEventListener('click', back);
