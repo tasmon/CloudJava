@@ -1,7 +1,7 @@
 /* Fast launcher: renders instantly from the browser-side library cache; the JVM only boots inside run.html */
 (function () {
   'use strict';
-  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '1.2.0';
+  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '1.2.1';
   var prefs = { theme: 'dark', touch: 'auto' };
   try { var p = JSON.parse(localStorage.getItem(KP) || '{}'); for (var k in p) prefs[k] = p[k]; } catch (e) {}
   var games = null;

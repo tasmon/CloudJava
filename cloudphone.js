@@ -40,6 +40,25 @@
     return;  /* in a game the emulator owns all keys */
   }
 
+  /* ---------- manage.html: Wipe Data / Uninstall shown directly under the selected game ---------- */
+  var pcHome = null, pcNext = null;
+  window.cpRestoreControls = function () {
+    var pc = document.getElementById('preview-controls'); if (!pc || !pcHome) return;
+    if (pc.parentNode !== pcHome) pcHome.insertBefore(pc, pcNext && pcNext.parentNode === pcHome ? pcNext : null);
+    var o = document.querySelector('.game-item.cp-open'); if (o) o.classList.remove('cp-open');
+  };
+  window.cpPlaceControls = function (id) {
+    var pc = document.getElementById('preview-controls'); if (!pc) return;
+    if (!pcHome) { pcHome = pc.parentNode; pcNext = pc.nextSibling; }
+    window.cpRestoreControls();
+    var list = document.getElementById('game-list'), item = null;
+    Array.prototype.forEach.call(list.querySelectorAll('.game-item'), function (g) { if (g.dataset.appId === id) item = g; });
+    if (!item) return;
+    item.appendChild(pc); item.classList.add('cp-open');
+    var b = pc.querySelector('button:not([disabled])'); if (b) b.focus();
+    item.scrollIntoView({ block: 'nearest' });
+  };
+
   /* ---------- manage.html: dialogs (no native alert/confirm), softkey bar, D-pad/touch helpers ---------- */
   function dialog(msg, btns) {
     return new Promise(function (res) {

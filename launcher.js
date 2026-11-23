@@ -152,12 +152,14 @@ async function loadGames() {
 }
 
 function fillGamesList(games) {
+    window.cpRestoreControls && window.cpRestoreControls();
     const container = document.getElementById("game-list");
     container.innerHTML = "";
 
     for (const game of games) {
         const item = document.createElement("div");
         item.className = "game-item";
+        item.dataset.appId = game.appId;
 
         const link = document.createElement("a");
         link.href = "run.html?app=" + game.appId;
@@ -189,6 +191,7 @@ function fillGamesList(games) {
 }
 
 function setupAddMode() {
+    window.cpRestoreControls && window.cpRestoreControls();
     if (!confirmDiscard()) {
         return;
     }
@@ -519,6 +522,7 @@ function openEditGame(gameObj) {
     document.getElementById("add-edit-text").textContent = "Edit game";
 
     setupAddManageGame(gameObj, false);
+    window.cpPlaceControls && window.cpPlaceControls(gameObj.appId);
 }
 
 function confirmDiscard() {

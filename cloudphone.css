@@ -67,3 +67,6 @@ body.cp-run .key,body.cp-run button{background:#1b1f27;color:#fff;border-color:#
 .cp-box{background:#14171d;border:1px solid #3a4150;border-radius:8px;padding:10px;width:100%;font:13px Roboto,Arial,sans-serif;color:#fff}
 .cp-dmsg{margin-bottom:10px;line-height:1.35;word-break:break-word}
 .cp-dbtns{display:flex;gap:6px}.cp-dbtns button{flex:1}
+
+body.cp-launcher .game-item.cp-open{background:#1b2230;border-radius:6px;outline:1px solid #1971e6}
+body.cp-launcher .game-item .manage-controls{flex:1 1 100%;display:flex;gap:6px}
