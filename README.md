@@ -43,10 +43,6 @@ Version 1.5.0 - Developer: Tasmon Islam
 ## What's new in 1.2.0
 - Scrolling fixed: every page can scroll to its very end on a keypad (Up/Down) or by touch.
 - Real dialogs for uninstall / wipe data, and clear error messages when a game fails to install (the old page silently did nothing on CloudPhone).
-- Branded as CloudJava.
-
-## Deploy on Vercel
-Import the GitHub repo in Vercel, Framework Preset **Other**, leave Build Command and Output Directory empty. Every upload to GitHub then redeploys automatically. Use your Vercel URL as the CloudPhone Start URL.
 
 ## Features
 - Instant launcher: opens without starting the Java engine
