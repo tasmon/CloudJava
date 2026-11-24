@@ -69,6 +69,46 @@
       document.body.appendChild(d); d.querySelector('button').focus();
     });
   }
+  window.cpAdded = function () {
+    var add = document.body.dataset.page === 'add';
+    var t = document.createElement('div'); t.id = 'cp-toast'; t.textContent = add ? 'Installed! Opening your games...' : 'Saved';
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); if (add) location.href = './'; }, 1700);
+  };
+  /* ---------- add.html: games shipped in the Preload folder ---------- */
+  function preloadNames() {
+    return fetch('Preload/index.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (a) { a = (a || []).map(function (x) { return typeof x === 'string' ? x : x && x.file; }).filter(function (n) { return n && /\.jar$/i.test(n); }); if (!a.length) throw 0; return a; })
+      .catch(function () {   /* GitHub Pages has no folder listing: ask the GitHub API instead */
+        var m = location.hostname.match(/^([^.]+)\.github\.io$/); if (!m) return [];
+        var seg = location.pathname.split('/')[1], repo = seg && seg.indexOf('.') < 0 ? seg : location.hostname;
+        return fetch('https://api.github.com/repos/' + m[1] + '/' + repo + '/contents/Preload').then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (a) { return (Array.isArray(a) ? a : []).filter(function (x) { return x.type === 'file' && /\.jar$/i.test(x.name); }).map(function (x) { return x.name; }); });
+      }).catch(function () { return []; });
+  }
+  if (document.body.dataset.page === 'add') {
+    var sec = document.createElement('div'); sec.id = 'cp-preload'; sec.style.display = 'none';
+    sec.innerHTML = '<h2>Preloaded games</h2><div id="cp-pre-list"></div><h2>Or pick your own file</h2>';
+    var anchor = document.querySelector('.add-edit-header'); if (anchor) anchor.parentNode.insertBefore(sec, anchor);
+    preloadNames().then(function (names) {
+      if (!names.length) return;
+      var box = document.getElementById('cp-pre-list');
+      names.sort().forEach(function (n) {
+        var b = document.createElement('button'); b.className = 'cp-pre-btn'; b.textContent = n.replace(/\.jar$/i, '');
+        b.onclick = function () {
+          sec.style.display = 'none';
+          fetch('Preload/' + encodeURIComponent(n)).then(function (r) { if (!r.ok) throw new Error('File not found: ' + n); return r.arrayBuffer(); })
+            .then(function (buf) { return window.cpInstallBuffer(buf, n); })
+            .catch(function (e) { sec.style.display = ''; window.cpError('Could not load ' + n, e); });
+        };
+        box.appendChild(b);
+      });
+      sec.style.display = '';
+    });
+    var fis = document.getElementById('file-input-step');
+    if (fis) new MutationObserver(function () { if (fis.style.display === 'none') sec.style.display = 'none'; else if (document.getElementById('cp-pre-list').children.length) sec.style.display = ''; }).observe(fis, { attributes: true, attributeFilter: ['style'] });
+  }
+
   window.cpConfirm = function (m) { return dialog(m, [{ t: 'Yes', v: true }, { t: 'No', v: false }]); };
   window.cpAlert = function (m) { return dialog(m, [{ t: 'OK', v: true }]); };
   window.cpError = function (title, e) {

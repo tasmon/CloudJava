@@ -70,3 +70,14 @@ body.cp-run .key,body.cp-run button{background:#1b1f27;color:#fff;border-color:#
 
 body.cp-launcher .game-item.cp-open{background:#1b2230;border-radius:6px;outline:1px solid #1971e6}
 body.cp-launcher .game-item .manage-controls{flex:1 1 100%;display:flex;gap:6px}
+
+/* Add page: installing only. Manage page: managing only. */
+body[data-page=add] .data-controls,body[data-page=add] #installed-title,body[data-page=add] #game-list,body[data-page=add] #edit-settings-container,body[data-page=add] #clear-current{display:none !important}
+body[data-page=manage] #file-input-step,body[data-page=manage] #file-input-jad-step,body[data-page=manage] #file-input-loading,body[data-page=manage].cp-adding .add-edit-header{display:none !important}
+.cp-hint{margin:0 0 10px;color:#9aa4b2;font-size:12px;line-height:1.4}
+body[data-page=add] #game-file-input{min-height:56px;border:2px dashed #1971e6;background:#10151f}
+body[data-page=add] .add-edit-header h2{font-size:15px}
+
+#cp-preload h2{font-size:13px;margin:10px 0 4px;color:#9aa4b2}
+#cp-pre-list{display:flex;flex-direction:column;gap:6px}
+.cp-pre-btn{text-align:left;min-height:44px !important;font-size:14px !important}

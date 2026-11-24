@@ -101,14 +101,6 @@ async function loadGames() {
     const apps = [];
 
     let installedAppsBlob = await cjFileBlob("/files/apps.list");
-    if (!installedAppsBlob) {
-        const res = await fetch("init.zip");
-        const ab = await res.arrayBuffer();
-        await launcherUtil.importData(new Int8Array(ab));
-
-        installedAppsBlob = await cjFileBlob("/files/apps.list");
-    }
-
     if (installedAppsBlob) {
         const installedIds = (await installedAppsBlob.text()).trim().split("\n");
 
@@ -202,6 +194,7 @@ function setupAddMode() {
         systemProperties: {},
     };
 
+    document.body.classList.add("cp-adding");
     document.getElementById("add-edit-text").textContent = "Add new game";
 
     document.getElementById("file-input-step").style.display = "";
@@ -229,6 +222,13 @@ function setupAddMode() {
         }
     };
 }
+
+window.cpInstallBuffer = async function (buffer, fileName) {
+    document.getElementById("game-file-input").disabled = true;
+    document.getElementById("file-input-step").style.display = "none";
+    document.getElementById("file-input-loading").style.display = "";
+    await processGameFile(buffer, fileName);
+};
 
 async function processGameFile(fileBuffer, fileName) {
     try {
@@ -486,6 +486,7 @@ async function doAddSaveGameInner() {
     }
 
     reloadUI();
+    window.cpAdded && window.cpAdded();
 }
 
 function readUI(targetGameObj) {
@@ -521,6 +522,7 @@ function openEditGame(gameObj) {
     state.currentGame = gameObj;
     document.getElementById("add-edit-text").textContent = "Edit game";
 
+    document.body.classList.remove("cp-adding");
     setupAddManageGame(gameObj, false);
     window.cpPlaceControls && window.cpPlaceControls(gameObj.appId);
 }

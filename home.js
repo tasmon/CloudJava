@@ -1,7 +1,7 @@
 /* Fast launcher: renders instantly from the browser-side library cache; the JVM only boots inside run.html */
 (function () {
   'use strict';
-  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '1.3.0';
+  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '1.5.0';
   var prefs = { theme: 'dark', touch: 'auto' };
   try { var p = JSON.parse(localStorage.getItem(KP) || '{}'); for (var k in p) prefs[k] = p[k]; } catch (e) {}
   var games = null;
@@ -36,12 +36,12 @@
     home: function () {
       var it = [{ h: 'Games (' + games.length + ')' }];
       games.forEach(function (g) { it.push({ l: g.name, s: 'Tap or OK to play', icon: g.icon, fn: function () { launch(g); } }); });
-      if (!games.length) { it.push({ t: 'No games yet.' }); it.push({ l: 'Add game', fn: function () { location.href = 'manage.html'; } }); }
+      if (!games.length) { it.push({ t: 'No games yet.' }); it.push({ l: 'Add game', fn: function () { location.href = 'add.html'; } }); }
       draw('CloudJava', it, true); keys('Menu', '');
     },
     menu: function () {
       draw('Menu', [
-        { l: 'Add game', fn: function () { location.href = 'manage.html'; } },
+        { l: 'Add game', fn: function () { location.href = 'add.html'; } },
         { l: 'Manage games', fn: function () { location.href = 'manage.html'; } },
         { l: 'Settings', fn: function () { go('settings'); } },
         { l: 'Help', fn: function () { go('help'); } },
