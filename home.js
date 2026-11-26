@@ -1,7 +1,7 @@
 /* Fast launcher: renders instantly from the browser-side library cache; the JVM only boots inside run.html */
 (function () {
   'use strict';
-  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '1.5.0';
+  var KG = 'j2me.games', KP = 'j2me.prefs', ver = '2.0.0';
   var prefs = { theme: 'dark', touch: 'auto' };
   try { var p = JSON.parse(localStorage.getItem(KP) || '{}'); for (var k in p) prefs[k] = p[k]; } catch (e) {}
   var games = null;
@@ -34,39 +34,41 @@
   }
   var V = {
     home: function () {
-      var it = [{ h: 'Games (' + games.length + ')' }];
-      games.forEach(function (g) { it.push({ l: g.name, s: 'Tap or OK to play', icon: g.icon, fn: function () { launch(g); } }); });
-      if (!games.length) { it.push({ t: 'No games yet.' }); it.push({ l: 'Add game', fn: function () { location.href = 'add.html'; } }); }
+      var it = [{ h: 'Apps (' + games.length + ')' }];
+      games.forEach(function (g) { it.push({ l: g.name, s: g.meta || '', icon: g.icon, fn: function () { launch(g); } }); });
+      if (!games.length) { it.push({ t: 'No apps yet.' }); it.push({ l: 'Add apps', fn: function () { location.href = 'add.html'; } }); }
       draw('CloudJava', it, true); keys('Menu', '');
     },
     menu: function () {
       draw('Menu', [
-        { l: 'Add game', fn: function () { location.href = 'add.html'; } },
-        { l: 'Manage games', fn: function () { location.href = 'manage.html'; } },
+        { l: 'Add apps', fn: function () { location.href = 'add.html'; } },
+        { l: 'Manage apps', fn: function () { location.href = 'manage.html'; } },
         { l: 'Settings', fn: function () { go('settings'); } },
+        deferred ? { l: 'Install CloudJava', fn: function () { deferred.prompt(); deferred = null; V.menu(); } } : null,
         { l: 'Help', fn: function () { go('help'); } },
-        { l: 'About', fn: function () { go('about'); } }]); keys('Select', 'Back');
+        { l: 'About', fn: function () { go('about'); } }].filter(Boolean)); keys('Select', 'Back');
     },
     settings: function () {
       draw('Settings', [
         { l: 'Theme', s: prefs.theme, fn: function () { prefs.theme = cycle(['dark', 'light', 'green'], prefs.theme); save(); theme(); V.settings(); } },
-        { l: 'Touch keypad in games', s: prefs.touch, fn: function () { prefs.touch = cycle(['auto', 'on', 'off'], prefs.touch); save(); V.settings(); } },
-        { l: 'Sound in games', s: soundOn() ? 'on (may stall CloudPhone)' : 'off (recommended)', fn: function () { try { localStorage.setItem('j2me.sound', soundOn() ? 'off' : 'on'); } catch (e) {} V.settings(); } },
+        { l: 'Touch keypad in apps', s: prefs.touch, fn: function () { prefs.touch = cycle(['auto', 'on', 'off'], prefs.touch); save(); V.settings(); } },
+        { l: 'Sound in apps', s: soundOn() ? 'on (may stall CloudPhone)' : 'off (recommended)', fn: function () { try { localStorage.setItem('j2me.sound', soundOn() ? 'off' : 'on'); } catch (e) {} V.settings(); } },
         { l: 'Refresh library', s: 'Rescan (loads Java engine)', fn: function () { try { localStorage.removeItem(KG); sessionStorage.removeItem('j2me.sync'); } catch (e) {} location.replace('manage.html?sync=1'); } }
       ], true); keys('Select', 'Back');
     },
     help: function () {
-      draw('Help', [{ t: '<b>Add games</b>Menu, then Add game. Games stay in this device\'s browser storage.' +
-        '<b>Play</b>Tap a game or press OK.' +
-        '<b>Keys in a game</b>Arrows and OK as on the phone. 2 up, 8 down, 4 left, 6 right, 5 fire. * and # work. Left key: tap = left soft key, hold = emulator menu (settings, exit). Right key = right soft key.' +
-        '<b>Settings</b>In the emulator menu set Phone type to Standard if keys feel wrong.' +
-        '<b>Touch</b>Touch phones get an on-screen keypad.' +
-        '<b>Sound</b>Off by default: CloudPhone cannot play it and game sounds made the screen hang with "video loading". Turn on in Settings only on a device that plays sound.' +
+      draw('Help', [{ t: '<b>Add apps</b>Menu, then Add apps. Pick one or more .jar files; they stay in this device\'s browser storage.' +
+        '<b>Run</b>Tap an app or press OK.' +
+        '<b>Manage</b>Menu, then Manage apps. Tap an app\'s name for Settings, Delete data or Uninstall.' +
+        '<b>Keys in an app</b>Arrows and OK as on the phone. 2 up, 8 down, 4 left, 6 right, 5 fire. * and # work. Left key: tap = left soft key, hold = emulator menu (settings, exit). Right key = right soft key.' +
+        '<b>Touch</b>Touch devices get an on-screen keypad.' +
+        '<b>Network</b>Apps can go online (web requests only) when CloudJava is hosted with its relay, for example on Vercel. Raw sockets are not supported.' +
+        '<b>Install CloudJava</b>Android or desktop: Menu, then Install CloudJava. iPhone or iPad: Share, then Add to Home Screen.' +
+        '<b>Sound</b>Off by default: CloudPhone cannot play it and sound made the screen hang with "video loading". Turn it on in Settings on devices that play sound.' +
         '<b>Loading</b>The first start of the Java engine needs internet and can take a minute.' +
-        '<b>Network</b>Games that need internet (browsers, chat) cannot connect: this emulator does not support network access.' +
         '<b>Scroll</b>Use Up/Down or swipe.' }]); keys('', 'Back');
     },
-    about: function () { draw('About', [{ t: '<b>CloudJava</b>Version - ' + ver + '<br>Developer - Tasmon Islam<br>Engine - freej2me-web by zb3 (GPLv3), based on FreeJ2ME<br>Java runtime - CheerpJ' }]); keys('', 'Back'); }
+    about: function () { draw('About', [{ t: '<b>CloudJava</b>Version - ' + ver + '<br>Developer - Tasmon Islam<br>Contact - tasmon@outlook.com<br>Engine - freej2me-web by zb3 (GPLv3), based on FreeJ2ME<br>Java runtime - CheerpJ' }]); keys('', 'Back'); }
   };
   function keys(l, r) { L.textContent = l; R.textContent = r; }
   function go(v, replace) { sel = 0; if (v !== view && !replace) history.pushState({ v: v }, '', '#' + v); view = v; V[v](); }
@@ -89,6 +91,9 @@
   document.body.addEventListener('click', function () { window.focus(); });
   function fit() { document.documentElement.style.setProperty('--vh', window.innerHeight + 'px'); }
   fit(); window.addEventListener('resize', fit);
+  var deferred = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; if (view === 'menu') V.menu(); });
+  if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
   theme(); var h = location.hash.slice(1); if (!V[h] || h === 'menu') h = 'home';
   history.replaceState({ v: h }, '', h === 'home' ? location.pathname + location.search : '#' + h); go(h, true);
 })();

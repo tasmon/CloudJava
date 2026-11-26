@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <script>(function(){var w=Math.min(screen.width||999,window.innerWidth||999);if(w>360){var m=document.querySelector('meta[name=viewport]');if(m)m.setAttribute('content','width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');}})();</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=240, height=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CloudJava - Add game</title>
+    <title>CloudJava - Add apps</title>
   <link rel="icon" type="image/png" href="icon.png">
 <link rel="stylesheet" href="cloudphone.css">
 </head>
@@ -479,30 +483,11 @@
     <div id="loading">Loading...</div>
     <main id="main" style="display: none">
       <div class="header">
-        <h1>Add game</h1>
-        <p class="cp-hint">Choose a game file (.jar) from your phone. It installs into this browser; you can change its settings later in Manage games.</p>
-        <div class="data-controls">
-          <button class="btn btn-outline" id="import-data-btn">
-            Import Data
-          </button>
-          <input
-            type="file"
-            id="import-data-file"
-            style="display: none"
-            accept=".zip"
-          />
-          <button class="btn btn-outline" id="export-data-btn">
-            Export Data
-          </button>
-          <a
-            id="export-data-link"
-            style="display: none"
-            download="freej2me-data.zip"
-            >x</a
-          >
-        </div>
+        <h1>Add apps</h1>
+        <p class="cp-hint">Choose one or more app files (.jar) from your phone. They install into this browser; you can change settings later in Manage apps.</p>
+        
       </div>
-      <h2 id="installed-title">Installed Games</h2>
+      <h2 id="installed-title">Installed apps</h2>
       <div id="game-list" class="game-list">
         <div class="game-item">
           <a href="run">
@@ -513,13 +498,13 @@
         </div>
       </div>
       <div class="add-edit-header">
-        <h2 id="add-edit-text">Add new game</h2>
+        <h2 id="add-edit-text">Add new app</h2>
         <button id="clear-current" class="btn btn-outline">Clear</button>
       </div>
       <div id="file-input-step">
         <div class="form-group">
-          <label for="game-file-input">Select JAR file</label>
-          <input type="file" id="game-file-input" accept=".jar" />
+          <label for="game-file-input">Select JAR files</label>
+          <input type="file" id="game-file-input" multiple accept=".jar" />
         </div>
       </div>
       <div id="file-input-jad-step" style="display: none">
@@ -547,19 +532,19 @@
       <div id="add-manage-step" style="display: none">
         <div id="preview" class="preview-container">
           <img class="preview-icon" />
-          <span class="preview-name">Game name</span>
+          <span class="preview-name">App name</span>
           <div id="preview-controls" class="manage-controls">
             <button
               id="wipe-data-btn"
               class="control-button warning-button"
-              title="Wipe Game Data"
+              title="Delete data"
             >
-              Wipe Data
+              Delete data
             </button>
             <button
               id="uninstall-btn"
               class="control-button danger-button"
-              title="Uninstall Game"
+              title="Uninstall"
             >
               Uninstall
             </button>
@@ -655,7 +640,7 @@
             >
             <label class="checkbox"
               ><input type="checkbox" name="queuedPaint" /> Queue paint events
-              (useful if game hangs)</label
+              (useful if the app hangs)</label
             >
           </div>
           <details class="advanced-settings">
@@ -678,7 +663,7 @@
             </div>
           </details>
         </div>
-        <button class="save-button" id="add-save-button">Add game</button>
+        <button class="save-button" id="add-save-button">Add app</button>
       </div>
       <div class="keyboard-controls">
         <h3>Keyboard controls</h3>
@@ -734,6 +719,29 @@
         </table>
       </div>
       <br /><br />
+          <div id="backup-section">
+        <h2>Backup</h2>
+        <div class="data-controls">
+          <button class="btn btn-outline" id="import-data-btn">
+            Import Data
+          </button>
+          <input
+            type="file"
+            id="import-data-file"
+            style="display: none"
+            accept=".zip"
+          />
+          <button class="btn btn-outline" id="export-data-btn">
+            Export Data
+          </button>
+          <a
+            id="export-data-link"
+            style="display: none"
+            download="freej2me-data.zip"
+            >x</a
+          >
+        </div>
+      </div>
     </main>
     <script src="https://cjrtnc.leaningtech.com/20260317_2978/loader.js"></script>
     <script type="module" src="launcher.js"></script>

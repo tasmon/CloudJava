@@ -8,15 +8,14 @@
 
   /* ---------- loading screen (progress is an estimate: stage based + easing) ---------- */
   var ov = document.createElement('div'); ov.id = 'cp-load';
-  ov.innerHTML = '<img src="icon.png" alt="" width="40" height="40"><div class="cp-name">CloudJava</div><div class="cp-ring"></div><div id="cp-pct">0%</div>' +
-    '<div class="cp-track"><div id="cp-fill"></div></div><div id="cp-msg">Starting Java engine</div>';
+  ov.innerHTML = '<div id="cp-pct">0%</div><div class="cp-track"><div id="cp-fill"></div></div><div id="cp-msg"></div>';
   document.body.appendChild(ov);
   var pct = 0, floor = 0, cap = 60, done = false, failed = false, msg = document.getElementById('cp-msg');
   function paint() { document.getElementById('cp-pct').textContent = Math.floor(pct) + '%'; document.getElementById('cp-fill').style.width = pct + '%'; }
   var tick = setInterval(function () { if (done || failed) return; pct = Math.max(pct, floor); pct += (cap - pct) * 0.035 + 0.03; if (pct > cap) pct = cap; paint(); }, 100);
   function stage(n) {
-    if (n === 'cheerpjInit') { floor = 62; cap = 86; msg.textContent = 'Loading emulator'; }
-    else if (n === 'cheerpjRunLibrary') { floor = 88; cap = 97; msg.textContent = run ? 'Starting game' : 'Almost ready'; }
+    if (n === 'cheerpjInit') { floor = 62; cap = 86; }
+    else if (n === 'cheerpjRunLibrary') { floor = 88; cap = 97; }
   }
   function finish() { if (done || failed) return; done = true; pct = 100; paint(); setTimeout(function () { ov.classList.add('cp-out'); setTimeout(function () { ov.style.display = 'none'; }, 350); }, 250); clearInterval(tick); }
   function fail(t) { if (done || failed) return; failed = true; ov.classList.add('cp-err'); msg.textContent = t; document.getElementById('cp-pct').textContent = '!'; }
@@ -26,9 +25,8 @@
   });
   window.addEventListener('unhandledrejection', function () { fail('Could not start the Java engine. Check your internet, then go Back and try again.'); });
   window.addEventListener('error', function (e) { if (e.target && e.target.tagName === 'SCRIPT') fail('Could not load the Java engine. Check your internet, then go Back and try again.'); }, true);
-  setTimeout(function () { if (!done && !failed) msg.textContent += ' (first load can take a minute)'; }, 15000);
   var ld = document.getElementById('loading');
-  if (ld) new MutationObserver(function () { if (/Crash/.test(ld.textContent)) fail('The game crashed. Press Back.'); }).observe(ld, { childList: true, characterData: true, subtree: true });
+  if (ld) new MutationObserver(function () { if (/Crash/.test(ld.textContent)) fail('The app crashed. Press Back.'); }).observe(ld, { childList: true, characterData: true, subtree: true });
 
   if (run) {
     window.cpGameStarted = function () {
@@ -54,10 +52,25 @@
     var list = document.getElementById('game-list'), item = null;
     Array.prototype.forEach.call(list.querySelectorAll('.game-item'), function (g) { if (g.dataset.appId === id) item = g; });
     if (!item) return;
+    if (!pc.querySelector('.cp-set-btn')) {
+      var sb = document.createElement('button'); sb.className = 'control-button cp-set-btn'; sb.textContent = 'Settings';
+      sb.onclick = function () { document.body.classList.add('cp-settings'); var f = document.getElementById('add-manage-step'); if (f) { f.scrollIntoView({ block: 'start' }); var i = f.querySelector('select,input,textarea'); if (i) i.focus(); } };
+      pc.insertBefore(sb, pc.firstChild);
+    }
+    document.body.classList.remove('cp-settings');
     item.appendChild(pc); item.classList.add('cp-open');
     var b = pc.querySelector('button:not([disabled])'); if (b) b.focus();
     item.scrollIntoView({ block: 'nearest' });
   };
+  if (document.body.dataset.page === 'manage') {   /* tapping / pressing OK on an app name opens or closes its options */
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('.game-item > a'); if (!a) return;
+      e.preventDefault();
+      var item = a.parentNode;
+      if (item.classList.contains('cp-open')) { window.cpRestoreControls(); document.body.classList.remove('cp-settings'); return; }
+      var mb = item.querySelector(':scope > button'); if (mb) mb.click();
+    }, true);
+  }
 
   /* ---------- manage.html: dialogs (no native alert/confirm), softkey bar, D-pad/touch helpers ---------- */
   function dialog(msg, btns) {
@@ -71,11 +84,11 @@
   }
   window.cpAdded = function () {
     var add = document.body.dataset.page === 'add';
-    var t = document.createElement('div'); t.id = 'cp-toast'; t.textContent = add ? 'Installed! Opening your games...' : 'Saved';
+    var t = document.createElement('div'); t.id = 'cp-toast'; t.textContent = add ? 'Installed! Opening your apps...' : 'Saved';
     document.body.appendChild(t);
     setTimeout(function () { t.remove(); if (add) location.href = './'; }, 1700);
   };
-  /* ---------- add.html: games shipped in the Preload folder ---------- */
+  /* ---------- add.html: apps shipped in the Preload folder (listed at the bottom) ---------- */
   function preloadNames() {
     return fetch('Preload/index.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (a) { a = (a || []).map(function (x) { return typeof x === 'string' ? x : x && x.file; }).filter(function (n) { return n && /\.jar$/i.test(n); }); if (!a.length) throw 0; return a; })
@@ -86,27 +99,46 @@
           .then(function (a) { return (Array.isArray(a) ? a : []).filter(function (x) { return x.type === 'file' && /\.jar$/i.test(x.name); }).map(function (x) { return x.name; }); });
       }).catch(function () { return []; });
   }
+  function preloadItem(n) {
+    return { name: n, read: function () { return fetch('Preload/' + encodeURIComponent(n)).then(function (r) { if (!r.ok) throw new Error('File not found'); return r.arrayBuffer(); }); } };
+  }
   if (document.body.dataset.page === 'add') {
     var sec = document.createElement('div'); sec.id = 'cp-preload'; sec.style.display = 'none';
-    sec.innerHTML = '<h2>Preloaded games</h2><div id="cp-pre-list"></div><h2>Or pick your own file</h2>';
-    var anchor = document.querySelector('.add-edit-header'); if (anchor) anchor.parentNode.insertBefore(sec, anchor);
+    sec.innerHTML = '<h2>Preloaded apps</h2><div id="cp-pre-list"></div>';
+    var mainEl = document.getElementById('main'); if (mainEl) mainEl.appendChild(sec);
     preloadNames().then(function (names) {
       if (!names.length) return;
+      names.sort();
       var box = document.getElementById('cp-pre-list');
-      names.sort().forEach(function (n) {
+      if (names.length > 1) {
+        var all = document.createElement('button'); all.className = 'cp-pre-btn cp-pre-all'; all.textContent = 'Install all (' + names.length + ')';
+        all.onclick = function () { sec.style.display = 'none'; window.cpInstallFiles(names.map(preloadItem)); };
+        box.appendChild(all);
+      }
+      names.forEach(function (n) {
         var b = document.createElement('button'); b.className = 'cp-pre-btn'; b.textContent = n.replace(/\.jar$/i, '');
-        b.onclick = function () {
-          sec.style.display = 'none';
-          fetch('Preload/' + encodeURIComponent(n)).then(function (r) { if (!r.ok) throw new Error('File not found: ' + n); return r.arrayBuffer(); })
-            .then(function (buf) { return window.cpInstallBuffer(buf, n); })
-            .catch(function (e) { sec.style.display = ''; window.cpError('Could not load ' + n, e); });
-        };
+        b.onclick = function () { sec.style.display = 'none'; window.cpInstallFiles([preloadItem(n)]); };
         box.appendChild(b);
       });
       sec.style.display = '';
     });
     var fis = document.getElementById('file-input-step');
     if (fis) new MutationObserver(function () { if (fis.style.display === 'none') sec.style.display = 'none'; else if (document.getElementById('cp-pre-list').children.length) sec.style.display = ''; }).observe(fis, { attributes: true, attributeFilter: ['style'] });
+
+    var qo = document.createElement('div'); qo.id = 'cp-install'; qo.style.display = 'none';
+    qo.innerHTML = '<div id="cp-ipct">0%</div><div class="cp-track"><div id="cp-ifill"></div></div><div id="cp-icount"></div>';
+    document.body.appendChild(qo);
+    window.cpProgress = function (i, n) {
+      qo.style.display = '';
+      var p = n ? Math.round(i * 100 / n) : 100;
+      document.getElementById('cp-ipct').textContent = p + '%'; document.getElementById('cp-ifill').style.width = p + '%';
+      document.getElementById('cp-icount').textContent = n > 1 ? Math.min(i + 1, n) + ' / ' + n : '';
+    };
+    window.cpQueueDone = function (ok, failed) {
+      qo.style.display = 'none';
+      if (!failed.length) { window.cpAdded(); return; }
+      window.cpAlert('Installed ' + ok + ' of ' + (ok + failed.length) + '. Problem: ' + failed.join(' | ').slice(0, 300)).then(function () { if (ok) location.href = './'; else location.reload(); });
+    };
   }
 
   window.cpConfirm = function (m) { return dialog(m, [{ t: 'Yes', v: true }, { t: 'No', v: false }]); };
@@ -156,9 +188,9 @@
     finish();
     var out = [];
     document.querySelectorAll('#game-list .game-item').forEach(function (it) {
-      var a = it.querySelector('a'), im = it.querySelector('img.icon'), n = it.querySelector('.game-info'); if (!a) return;
+      var a = it.querySelector('a'), im = it.querySelector('img.icon'), n = it.querySelector('.game-info'), mt = it.querySelector('.game-meta'); if (!a) return;
       var id = new URL(a.href, location.href).searchParams.get('app');
-      out.push({ id: id, name: n ? n.textContent : id, icon: im && im.src.indexOf('data:image/gif') !== 0 ? im.src : '' });
+      out.push({ id: id, name: n ? n.textContent : id, meta: mt ? mt.textContent : '', icon: im && im.src.indexOf('data:image/gif') !== 0 ? im.src : '' });
     });
     try { localStorage.setItem('j2me.games', JSON.stringify(out)); } catch (e) { return; }
     if (/[?&]sync=1/.test(location.search)) location.replace('./');

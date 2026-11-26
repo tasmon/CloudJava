@@ -42,20 +42,18 @@ body.cp-launcher :focus{outline:3px solid #1971e6 !important;outline-offset:1px}
 body.cp-run #cp-bar{display:none}
 @media (max-width:128px){body.cp-launcher{font-size:10px;padding-bottom:26px}#cp-bar{height:24px;font-size:10px}}
 
-/* ---- shared animated loading screen ---- */
+/* ---- loading screen: only % and bar ---- */
 #loading{display:none !important}
-#cp-load{position:fixed;left:0;right:0;top:0;bottom:38px;background:#000;color:#fff;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-family:Roboto,Arial,sans-serif;transition:opacity .3s}
+#cp-load,#cp-install{position:fixed;left:0;right:0;top:0;bottom:38px;background:#000;color:#fff;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:Roboto,Arial,sans-serif;transition:opacity .3s}
 body.cp-run #cp-load{bottom:0}
 #cp-load.cp-out{opacity:0}
-#cp-load img{image-rendering:pixelated;border-radius:8px}
-.cp-ring{width:34px;height:34px;border:4px solid #26303f;border-top-color:#1971e6;border-radius:50%;animation:cpspin .9s linear infinite}
-#cp-load.cp-err .cp-ring{animation:none;border-color:#e74c3c}
-@keyframes cpspin{to{transform:rotate(360deg)}}
-#cp-pct{font-size:22px;font-weight:bold}
+#cp-pct,#cp-ipct{font-size:34px;font-weight:bold;letter-spacing:1px}
 .cp-track{width:70%;height:8px;background:#1b1f27;border-radius:4px;overflow:hidden}
-#cp-fill{height:100%;width:0;background:#1971e6;transition:width .15s linear}
+#cp-fill,#cp-ifill{height:100%;width:0;background:#1971e6;transition:width .15s linear}
 #cp-load.cp-err #cp-fill{background:#e74c3c}
-#cp-msg{font-size:12px;color:#9aa4b2;text-align:center;padding:0 12px}
+#cp-load.cp-err #cp-pct{color:#e74c3c}
+#cp-msg:empty{display:none}
+#cp-msg,#cp-icount{font-size:12px;color:#9aa4b2;text-align:center;padding:0 12px}
 #cp-toast{position:fixed;left:6px;right:6px;bottom:6px;background:rgba(25,113,230,.95);color:#fff;font:12px Roboto,Arial,sans-serif;padding:6px 8px;border-radius:6px;z-index:9999;text-align:center}
 /* game page: same look as the rest of the app */
 body.cp-run,body.cp-run #screen-area{background:#000 !important;color:#fff}
@@ -72,7 +70,7 @@ body.cp-launcher .game-item.cp-open{background:#1b2230;border-radius:6px;outline
 body.cp-launcher .game-item .manage-controls{flex:1 1 100%;display:flex;gap:6px}
 
 /* Add page: installing only. Manage page: managing only. */
-body[data-page=add] .data-controls,body[data-page=add] #installed-title,body[data-page=add] #game-list,body[data-page=add] #edit-settings-container,body[data-page=add] #clear-current{display:none !important}
+body[data-page=add] #backup-section,body[data-page=add] #installed-title,body[data-page=add] #game-list,body[data-page=add] #edit-settings-container,body[data-page=add] #clear-current{display:none !important}
 body[data-page=manage] #file-input-step,body[data-page=manage] #file-input-jad-step,body[data-page=manage] #file-input-loading,body[data-page=manage].cp-adding .add-edit-header{display:none !important}
 .cp-hint{margin:0 0 10px;color:#9aa4b2;font-size:12px;line-height:1.4}
 body[data-page=add] #game-file-input{min-height:56px;border:2px dashed #1971e6;background:#10151f}
@@ -81,3 +79,22 @@ body[data-page=add] .add-edit-header h2{font-size:15px}
 #cp-preload h2{font-size:13px;margin:10px 0 4px;color:#9aa4b2}
 #cp-pre-list{display:flex;flex-direction:column;gap:6px}
 .cp-pre-btn{text-align:left;min-height:44px !important;font-size:14px !important}
+
+/* manage: tap the app name to reveal options; settings form only on request */
+body[data-page=manage] .game-item > button:not(.control-button){display:none !important}
+body[data-page=manage]:not(.cp-settings) #add-manage-step{display:none !important}
+body[data-page=manage] .game-item > a{cursor:pointer}
+body[data-page=manage] .game-item.cp-open .manage-controls{display:flex;flex-direction:column;gap:6px}
+body[data-page=manage] .manage-controls .control-button{width:100%}
+#backup-section{margin-top:18px}
+#backup-section h2{margin:0 0 6px}
+.game-text{display:flex;flex-direction:column;min-width:0}
+.game-meta{font-size:11px;color:#9aa4b2;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body[data-page=add].cp-queue #add-manage-step{display:none !important}
+.cp-pre-all{border-color:#1971e6 !important}
+
+/* wide screens (desktop, iPad): centered column like a phone */
+@media (min-width:521px){
+  body.cp-launcher{max-width:520px;margin-left:auto;margin-right:auto}
+  #cp-bar,#cp-load,#cp-install{width:100%;max-width:520px;left:50%;right:auto;transform:translateX(-50%)}
+}

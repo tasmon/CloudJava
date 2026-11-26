@@ -1,6 +1,7 @@
 {
   "buildCommand": "node make-preload.js",
   "outputDirectory": ".",
+  "functions": { "api/proxy.js": { "maxDuration": 30 } },
   "cleanUrls": false,
   "trailingSlash": false,
   "headers": [

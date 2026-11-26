@@ -143,6 +143,12 @@ async function loadGames() {
     return apps;
 }
 
+function pget(obj, key) {
+    if (!obj) return "";
+    for (const k of Object.keys(obj)) if (k.toLowerCase() === key.toLowerCase()) return (obj[k] || "").trim();
+    return "";
+}
+
 function fillGamesList(games) {
     window.cpRestoreControls && window.cpRestoreControls();
     const container = document.getElementById("game-list");
@@ -166,10 +172,20 @@ function fillGamesList(games) {
         icon.src = game.icon;
         link.appendChild(icon);
 
+        const text = document.createElement("div");
+        text.className = "game-text";
         const info = document.createElement("div");
         info.className = "game-info";
         info.textContent = game.name;
-        link.appendChild(info);
+        text.appendChild(info);
+        const metaText = [pget(game.appProperties, "MIDlet-Vendor"), pget(game.appProperties, "MIDlet-Version") && "v" + pget(game.appProperties, "MIDlet-Version")].filter(Boolean).join(" \u00b7 ");
+        if (metaText) {
+            const meta = document.createElement("div");
+            meta.className = "game-meta";
+            meta.textContent = metaText;
+            text.appendChild(meta);
+        }
+        link.appendChild(text);
 
         item.appendChild(link);
 
@@ -195,7 +211,8 @@ function setupAddMode() {
     };
 
     document.body.classList.add("cp-adding");
-    document.getElementById("add-edit-text").textContent = "Add new game";
+    document.body.classList.remove("cp-settings");
+    document.getElementById("add-edit-text").textContent = "Add new app";
 
     document.getElementById("file-input-step").style.display = "";
     document.getElementById("file-input-loading").style.display = "none";
@@ -205,23 +222,41 @@ function setupAddMode() {
     document.getElementById("game-file-input").disabled = false;
     document.getElementById("game-file-input").value = null;
 
+    document.getElementById("game-file-input").multiple = true;
     document.getElementById("game-file-input").onchange = (e) => {
-        // read file to arraybuffer
-        const file = e.target.files[0];
-        if (file) {
-            document.getElementById("game-file-input").disabled = true;
-            document.getElementById("file-input-step").style.display = "none";
-            document.getElementById("file-input-loading").style.display = "";
-
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const arrayBuffer = reader.result;
-                await processGameFile(arrayBuffer, file.name);
-            };
-            reader.readAsArrayBuffer(file);
+        const files = Array.from(e.target.files || []);
+        if (files.length) {
+            window.cpInstallFiles(files.map((f) => ({ name: f.name, read: () => f.arrayBuffer() })));
         }
     };
 }
+
+/* Installs one or more apps with their guessed default settings, without asking questions. */
+window.cpInstallFiles = async function (items) {
+    window.cpQueue = true;
+    document.body.classList.add("cp-queue");
+    document.getElementById("game-file-input").disabled = true;
+    document.getElementById("file-input-step").style.display = "none";
+    const failed = [];
+    let ok = 0;
+    for (let i = 0; i < items.length; i++) {
+        window.cpProgress && window.cpProgress(i, items.length, items[i].name);
+        try {
+            state.currentGame = { icon: emptyIcon, settings: { ...defaultSettings }, appProperties: {}, systemProperties: {} };
+            const buf = await items[i].read();
+            await processGameFileInner(buf, items[i].name);
+            await doAddSaveGameInner();
+            ok++;
+        } catch (e) {
+            failed.push(items[i].name + ": " + ((e && e.message) || e));
+        }
+    }
+    window.cpProgress && window.cpProgress(items.length, items.length, "");
+    window.cpQueue = false;
+    document.body.classList.remove("cp-queue");
+    await reloadUI();
+    window.cpQueueDone && window.cpQueueDone(ok, failed);
+};
 
 window.cpInstallBuffer = async function (buffer, fileName) {
     document.getElementById("game-file-input").disabled = true;
@@ -261,7 +296,9 @@ async function processGameFileInner(fileBuffer, fileName) {
     const loader = await MIDletLoader.getMIDletLoader(jarFile);
     state.lastLoader = loader;
 
-    if (!(await loader.getAppId())) {
+    if (!(await loader.getAppId()) && window.cpQueue) {
+        await continueWithoutJAD(loader, fileName);
+    } else if (!(await loader.getAppId())) {
         document.getElementById("file-input-step").style.display = "";
         document.getElementById("file-input-loading").style.display = "none";
         document.getElementById("file-input-jad-step").style.display = "";
@@ -294,7 +331,7 @@ async function processGameFileInner(fileBuffer, fileName) {
             continueWithoutJAD(loader, fileName);
         };
     } else {
-        setupNewGameManage(loader);
+        await setupNewGameManage(loader);
     }
 }
 
@@ -314,7 +351,7 @@ async function continueWithoutJAD(loader, origName) {
     await launcherUtil.ensureAppId(loader, origName);
     loader.name = await loader.getAppId();
 
-    setupNewGameManage(loader);
+    await setupNewGameManage(loader);
 }
 
 async function setupNewGameManage(loader) {
@@ -327,7 +364,7 @@ async function setupNewGameManage(loader) {
 
     await javaToKv(loader.properties, state.currentGame.appProperties);
 
-    setupAddManageGame(state.currentGame, true);
+    await setupAddManageGame(state.currentGame, true);
 }
 
 async function setupAddManageGame(app, isAdding) {
@@ -357,7 +394,7 @@ async function setupAddManageGame(app, isAdding) {
 
         document.getElementById("wipe-data-btn").disabled = false;
         document.getElementById("wipe-data-btn").onclick = async (e) => {
-            if (!(await cpConfirm("Do you want wipe " + app.name + " rms storage?"))) {
+            if (!(await cpConfirm("Delete saved data of " + app.name + "?"))) {
                 return;
             }
 
@@ -413,7 +450,7 @@ async function setupAddManageGame(app, isAdding) {
         .join("\n");
 
     document.getElementById("add-save-button").disabled = false;
-    document.getElementById("add-save-button").textContent = isAdding ? "Add game" : "Save game";
+    document.getElementById("add-save-button").textContent = isAdding ? "Add app" : "Save app";
     document.getElementById("add-save-button").onclick = doAddSaveGame;
 }
 
@@ -454,7 +491,7 @@ async function doAddSaveGame() {
         await doAddSaveGameInner();
     } catch (e) {
         document.getElementById("add-save-button").disabled = false;
-        window.cpError && window.cpError("Could not save game", e);
+        window.cpError && window.cpError("Could not save app", e);
     }
 }
 
@@ -485,8 +522,10 @@ async function doAddSaveGameInner() {
         );
     }
 
-    reloadUI();
-    window.cpAdded && window.cpAdded();
+    if (!window.cpQueue) {
+        reloadUI();
+        window.cpAdded && window.cpAdded();
+    }
 }
 
 function readUI(targetGameObj) {
@@ -520,7 +559,7 @@ function openEditGame(gameObj) {
         return;
     }
     state.currentGame = gameObj;
-    document.getElementById("add-edit-text").textContent = "Edit game";
+    document.getElementById("add-edit-text").textContent = "Edit app";
 
     document.body.classList.remove("cp-adding");
     setupAddManageGame(gameObj, false);

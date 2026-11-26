@@ -22,3 +22,8 @@ footer span:active{background:var(--ac);color:#fff}
 #app{top:20px;bottom:24px}footer{height:24px;font-size:10px}.item{min-height:30px;font-size:11px;padding:3px 4px}.item img{width:18px;height:18px;margin-right:5px}.txt{font-size:10px}}
 
 #app::after{content:'';display:block;height:24px}
+
+@media (min-width:521px){
+  header,#app,footer{width:100%;max-width:520px;left:50%;right:auto;transform:translateX(-50%)}
+  body{background:var(--bg)}
+}

@@ -1,4 +1,5 @@
 import { LibMedia, soundOn, makeSilentMidi } from "./libmedia.js";
+import { httpBridgeNatives } from "./libhttpbridge.js";
 import { LibMidi, createUnlockingAudioContext } from "./libmidi.js";
 import { codeMap, KeyRepeatManager } from "./key.js";
 import { EventQueue } from "./eventqueue.js";
@@ -286,6 +287,7 @@ async function init() {
             ...jsReferenceNatives,
             ...mediaBridgeNatives,
             ...midiBridgeNatives,
+            ...httpBridgeNatives,
             async Java_pl_zb3_freej2me_bridge_shell_Shell_setTitle(lib, title) {
                 document.title = title;
             },
