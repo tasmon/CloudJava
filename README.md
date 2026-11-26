@@ -7,7 +7,6 @@
 <p>
   <img alt="Version 2.0.0" src="https://img.shields.io/badge/version-2.0.0-1f9d55">
   <img alt="Platform CloudPhone" src="https://img.shields.io/badge/platform-CloudPhone-0a84ff">
-  <img alt="Android, iOS, desktop" src="https://img.shields.io/badge/works%20on-Android%20%7C%20iPhone%20%7C%20iPad%20%7C%20desktop-555">
   <img alt="Installable PWA" src="https://img.shields.io/badge/PWA-installable-5a0fc8?logo=pwa&logoColor=white">
   <img alt="Java ME MIDP" src="https://img.shields.io/badge/Java%20ME-MIDP%20apps-e76f00?logo=openjdk&logoColor=white">
   <img alt="Input keypad and touch" src="https://img.shields.io/badge/input-keypad%20%2B%20touch-8e44ad">
