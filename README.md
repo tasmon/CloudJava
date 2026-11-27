@@ -22,7 +22,7 @@ Version 2.0.1 - Developer: Tasmon Islam
 1. Go to [CloudPhone Developer Page](https://www.cloudfone.com/my).  
 2. Select **Add Widget**.  
 3. Paste this Start URL:  
-   `https://tasmon.github.io/CloudJava/`  
+   `https://cloudjava.vercel.app`  
 4. Upload icons if required (`icon.png` is included).  
 5. Save and refresh - **CloudJava** will appear on your CloudPhone. 
 
