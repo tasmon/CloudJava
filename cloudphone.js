@@ -5,6 +5,12 @@
   document.body.classList.add(run ? 'cp-run' : 'cp-launcher');
   window.addEventListener('load', function () { window.focus(); });
   document.body.addEventListener('click', function () { window.focus(); });
+  /* Go back to Home without leaving extra history entries (so Exit on Home closes the app) */
+  window.cpGoHome = function () {
+    if (window.cpLeaving) return; window.cpLeaving = true;
+    setTimeout(function () { location.replace('./'); }, 600);
+    history.back();
+  };
 
   /* ---------- loading screen (progress is an estimate: stage based + easing) ---------- */
   var ov = document.createElement('div'); ov.id = 'cp-load';
@@ -86,7 +92,7 @@
     var add = document.body.dataset.page === 'add';
     var t = document.createElement('div'); t.id = 'cp-toast'; t.textContent = add ? 'Installed! Opening your apps...' : 'Saved';
     document.body.appendChild(t);
-    setTimeout(function () { t.remove(); if (add) location.href = './'; }, 1700);
+    setTimeout(function () { t.remove(); if (add) window.cpGoHome(); }, 1700);
   };
   /* ---------- add.html: apps shipped in the Preload folder (listed at the bottom) ---------- */
   function preloadNames() {
@@ -137,7 +143,7 @@
     window.cpQueueDone = function (ok, failed) {
       qo.style.display = 'none';
       if (!failed.length) { window.cpAdded(); return; }
-      window.cpAlert('Installed ' + ok + ' of ' + (ok + failed.length) + '. Problem: ' + failed.join(' | ').slice(0, 300)).then(function () { if (ok) location.href = './'; else location.reload(); });
+      window.cpAlert('Installed ' + ok + ' of ' + (ok + failed.length) + '. Problem: ' + failed.join(' | ').slice(0, 300)).then(function () { if (ok) window.cpGoHome(); else location.reload(); });
     };
   }
 
@@ -167,7 +173,9 @@
     var n = l[(i + d + l.length) % l.length]; n.focus(); n.scrollIntoView({ block: 'nearest' });
   }
   function select() { var a = document.activeElement; if (a && a !== document.body) a.click(); }
-  function back() { if (history.length > 1) history.back(); else location.href = './'; }
+  function back() { window.cpGoHome(); }
+  history.pushState({ cpg: 1 }, '', location.href);   /* the right key (browser Back) returns to Home */
+  window.addEventListener('popstate', function () { location.replace('./'); });
   window.addEventListener('keydown', function (e) {
     var t = e.target && e.target.tagName, ty = e.target && e.target.type;
     if (e.key === 'Escape') { e.preventDefault(); select(); return; }
@@ -193,7 +201,7 @@
       out.push({ id: id, name: n ? n.textContent : id, meta: mt ? mt.textContent : '', icon: im && im.src.indexOf('data:image/gif') !== 0 ? im.src : '' });
     });
     try { localStorage.setItem('j2me.games', JSON.stringify(out)); } catch (e) { return; }
-    if (/[?&]sync=1/.test(location.search)) location.replace('./');
+    if (/[?&]sync=1/.test(location.search)) window.cpGoHome();
   }
   function later() { clearTimeout(timer); timer = setTimeout(snap, 600); }
   var mo = new MutationObserver(later);

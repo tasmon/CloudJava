@@ -5,8 +5,9 @@
 ## CloudJava for CloudPhone
 
 <p>
-  <img alt="Version 2.0.0" src="https://img.shields.io/badge/version-2.0.0-1f9d55">
+  <img alt="Version 2.0.1" src="https://img.shields.io/badge/version-2.0.1-1f9d55">
   <img alt="Platform CloudPhone" src="https://img.shields.io/badge/platform-CloudPhone-0a84ff">
+  <img alt="Android, iOS, desktop" src="https://img.shields.io/badge/works%20on-Android%20%7C%20iPhone%20%7C%20iPad%20%7C%20desktop-555">
   <img alt="Installable PWA" src="https://img.shields.io/badge/PWA-installable-5a0fc8?logo=pwa&logoColor=white">
   <img alt="Java ME MIDP" src="https://img.shields.io/badge/Java%20ME-MIDP%20apps-e76f00?logo=openjdk&logoColor=white">
   <img alt="Input keypad and touch" src="https://img.shields.io/badge/input-keypad%20%2B%20touch-8e44ad">
@@ -15,7 +16,7 @@
 
 **CloudJava** runs classic Java ME (J2ME) `.jar` apps and games in your browser. It is built for CloudPhone feature phones (240x320 and 128x160 screens) and also works on modern phones, tablets and computers. Your apps, settings and saves stay in your browser.
 
-Version 2.0.0 - Developer: Tasmon Islam
+Version 2.0.1 - Developer: Tasmon Islam
 
 ## Add to CloudPhone
 1. Go to [CloudPhone Developer Page](https://www.cloudfone.com/my).  

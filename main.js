@@ -262,7 +262,7 @@ async function init() {
 
     history.pushState({cp: 1}, '', location.href);
     window.addEventListener('popstate', () => {
-        if (!scaleSet || window.cpExit) { location.href = './'; return; }
+        if (!scaleSet || window.cpExit || window.cpLeaving) { location.replace('./'); return; }
         history.pushState({cp: 1}, '', location.href);
         window.cpTap && window.cpTap('F2');
     });
@@ -336,7 +336,7 @@ async function init() {
                 location.reload();
             },
             async Java_pl_zb3_freej2me_bridge_shell_Shell_exit(lib) {
-                location.href = './';
+                if (window.cpGoHome) window.cpGoHome(); else location.replace('./');
             },
             async Java_pl_zb3_freej2me_bridge_shell_Shell_sthop(lib) {
                 debugger;
@@ -353,7 +353,7 @@ async function init() {
 
     document.getElementById("loading").textContent = "Loading...";
 
-    const lib = await cheerpjRunLibrary(cheerpjWebRoot+"/freej2me-web.jar");
+    const lib = await cheerpjRunLibrary(cheerpjWebRoot+"/cloudjava-engine.jar");
 
     const FreeJ2ME = await lib.org.recompile.freej2me.FreeJ2ME;
 

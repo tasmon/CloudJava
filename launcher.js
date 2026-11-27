@@ -18,7 +18,7 @@ async function main() {
         enableDebug: false
     });
 
-    lib = await cheerpjRunLibrary(cheerpjWebRoot+"/freej2me-web.jar");
+    lib = await cheerpjRunLibrary(cheerpjWebRoot+"/cloudjava-engine.jar");
 
     document.getElementById("loading").textContent = "Loading...";
 
