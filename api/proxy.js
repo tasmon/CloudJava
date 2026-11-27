@@ -51,7 +51,7 @@ module.exports = async (req, res) => {
   });
   if (!Object.keys(h).some(k => k.toLowerCase() === 'user-agent')) h['User-Agent'] = 'Mozilla/5.0 (compatible; CloudJava)';
 
-  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 20000);
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 8000);
   try {
     const r = await fetch(u.href, { method, headers: h, redirect: 'manual', signal: ctl.signal,
       body: method === 'POST' && body ? Buffer.from(body, 'base64') : undefined });
